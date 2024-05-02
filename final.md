@@ -2,7 +2,7 @@
 
 The final project of class **Machine Learning for Finance 2024**
 student1: Deng Tingqin 2301212321 Fintech
-student2: Niu Yitong [stu ID] Quantitative Finance
+student2: Niu Yitong 2301212368 Quantitative Finance
 Supervisor: Professor Choi
 
 ## Background
@@ -12,6 +12,7 @@ Our question and dataset originate from an ongoing Kaggle competition titled "Ho
 ## Question Description
 
 The dataset is highly diverse, consisting of multiple sub-datasets generated from various segments. These segments include not only internal departments but also external institutions. For instance, the applprev datasets originate from the internal previous loan application segment, while the tax registry datasets are sourced from government taxation data. Each case ID (a piece of prediction sample) may appear in some segments but not in others. This presents challenges in constructing a model. Besides, even for a case id in one segment, there are always many missing values, posing great difficulties for data analysis. Another challenging part of the dataset is that, for one table, it may have what so-call ‘depth’. For depth=0, these are static features directly tied to a specific case_id. For depth=1 - Each case_id has an associated historical record, indexed by num_group1. For depth=2 - Each case_id has an associated historical record, indexed by both num_group1 and num_group2. This means that each case_id may have multiple data pieces in one table, which requiring feature aggregation. The evaluation metric of this problem is gini, which equals to **gini=2*AUC-1**.
+
 ![highly diversed tables](image.png)
 
 ## Feature Engineering
@@ -139,14 +140,12 @@ A problem about the target is that, for credit risk problem, there are always fe
 And we also used **Optuna** for hyperparameter tuning. Optuna is an automatic hyperparameter optimization software framework, particularly designed for machine learning. It features an imperative, define-by-run style user API. Thanks to our define-by-run API, the code written with Optuna enjoys high modularity, and the user of Optuna can dynamically construct the search spaces for the hyperparameters. (https://github.com/optuna/optuna)
 
 ```python
-# CV调参模板，使用原生LGBM
 import optuna  # pip install optuna
 from sklearn.model_selection import StratifiedKFold
 from scipy.special import softmax
 # from optuna.integration import LightGBMPruningCallback  ##callback类很方便，它可以在对数据进行训练之前检测出不太好的超参数集，从而显着减少搜索时间。
 
 def objective_lgbm(trial, X, y, ctg_features):
-    # 参数网格
     param_grid = {
         'objective': 'binary',
         'boosting_type': 'gbdt',  ###
@@ -158,8 +157,8 @@ def objective_lgbm(trial, X, y, ctg_features):
         "seed": 42,
         "random_state": 2024,
     }
-    # 5折交叉验证
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=1121218)  ## 已经是分层抽样
+   
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=1121218)  
 
     cv_scores = np.empty(5)
     for idx, (train_idx, test_idx) in enumerate(cv.split(X, y)):
@@ -174,10 +173,10 @@ def objective_lgbm(trial, X, y, ctg_features):
             valid_sets=lgb_valid,
             callbacks=[lgbm.log_evaluation(50), lgbm.early_stopping(10)]
         )
-        # 模型预测
+
         preds = lgbm_model.predict(X_valid)
         prob = softmax(preds)
-        # 优化指标logloss最小
+
         cv_scores[idx] = roc_auc_score(y_valid, prob)
         if not os.path.exists('lgbm_model'):
             os.makedirs('lgbm_model')
@@ -214,8 +213,8 @@ def CV_for_lgbm(X, y, ctg_features):
         "seed": 42,
         "random_state": 2024,
     }
-    # 5折交叉验证
-    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=1121218)  ## 已经是分层抽样
+
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=1121218) 
 
     cv_scores = np.empty(5)
     for idx, (train_idx, test_idx) in enumerate(cv.split(X, y)):
@@ -230,10 +229,10 @@ def CV_for_lgbm(X, y, ctg_features):
             valid_sets=lgb_valid,
             callbacks=[lgbm.log_evaluation(50), lgbm.early_stopping(10)]
         )
-        # 模型预测
+      
         preds = lgbm_model.predict(X_valid)
         prob = softmax(preds)
-        # 优化指标logloss最小
+       
         cv_scores[idx] = roc_auc_score(y_valid, prob)
         if not os.path.exists('lgbm_model'):
             os.makedirs('lgbm_model')
@@ -267,5 +266,7 @@ class MLP(nn.Module):
 
 For each table, we get the average forecasting probe of lgbm and mlp models. And for each case, we could get the default probes from many segments’ datasets, and we simply averages the default probes of all segments to get the final default probes of a case.
 ![alt text](image-3.png)
+The ROC curve based on train dataset is drawn below.
+![alt text](image-4.png)
 
 The final score we got now is 0.58, which was ranked at **758/2,771**.
