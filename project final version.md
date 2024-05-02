@@ -1,8 +1,8 @@
 # Home Credit - Credit Risk Model Stability
 
-The final project of class **Machine Learning for Finance 2024**
-student1: Deng Tingqin 2301212321 Fintech
-student2: Niu Yitong 2301212368 Quantitative Finance
+The final project of class **Machine Learning for Finance 2024** <br>
+student1: Deng Tingqin 2301212321 Fintech <br>
+student2: Niu Yitong 2301212368 Quantitative Finance <br>
 Supervisor: Professor Choi
 
 ## Background
@@ -265,7 +265,7 @@ class MLP(nn.Module):
 ## Ensemble Learning and Segments Combination
 
 For each table, we get the average forecasting probe of lgbm and mlp models. And for each case, we could get the default probes from many segments’ datasets, and we simply averages the default probes of all segments to get the final default probes of a case.
-![alt text](image-3.png)
+![alt text](image-3.png) <br>
 The ROC curve based on train dataset is drawn below.
 ![alt text](image-4.png)
 
